@@ -2,37 +2,40 @@ const express = require('express');
 const usersRoutes = express.Router();
 const userService = require('../services/userService');
 
-const responseCodes = {
-    Unauthorized: 401,
-    ServerError: 500,
-    EntityTaken: 422,
-    Ok: 200
-}
-
 usersRoutes.route('/users').get( async function (req, res) {
     try {
         const users = await userService.getAll();
         return res.send(users);
     } catch(err) {
+        console.error(err);
         res.status(500);
         return res.send({error: 'internal server error'});
     }
 });
 
 usersRoutes.route('/users/create').post( async function (req, res) {
-    const userDTO = req.body;
+    const {firstName, lastName, email, password} = req.body;
+    if (!(firstName, lastName, email, password)){
+        res.status(400).send('Missing input');
+    }
+
+    const userDTO = {
+        firstName,
+        lastName,
+        email,
+        password
+    }
+
     try {
+        existingUser = await userService.getOneByEmail(email);
+        if (existingUser) {
+            return res.status(422).send({error: 'Email taken'});
+        }
         const user = await userService.create(userDTO);
         return res.send(user);
     } catch (err) {
-        let code = 500;
-        let message = 'Internal server error';
-        if (err.message === 'EntityTaken') {
-            code = 422;
-            message = 'Email taken';
-        }
-        res.status(code);
-        return res.send({error: message});
+        console.error(err);
+        return res.status(500).send({error: 'Internal server error'});
     }
     
 });
@@ -48,9 +51,10 @@ usersRoutes.route('/users/login').post( async function (req, res) {
     const {email, password} = req.body;
     try {
         const userDTO = await userService.login(email, password);
-        res.send({userDTO});
+        res.send(userDTO);
     } catch (err) {
         (err.message === 'Unauthorized') ? res.status(401) : res.status(500);
+        if (res.status === 500) console.error(err);
         return res.send({error: 'internal server error'});
     }
 });

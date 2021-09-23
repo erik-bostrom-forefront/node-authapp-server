@@ -1,14 +1,45 @@
 const userModel = require('../models/userModel');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const userService = {};
 
-userService.getAll = function () { return userModel.getAll(); }
+userService.getAll = async function () {
+    const users = await userModel.getAll();
+    const usersDTO = [];
+    for (let user of users) {
+        usersDTO.push({
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email
+        });
+    }
+    return usersDTO;
+}
+
+userService.getOneByEmail = async function (email) {
+    return await userModel.getOneByEmail(email);
+
+}
 
 userService.create = async function (userDTO) {
     let hashedPassword = await bcrypt.hash(userDTO.password, 10);
     userDTO.password = hashedPassword;
+    const user = await userModel.create(userDTO);
+    const token = jwt.sign(
+        {user_id: user._id, email: user.email },
+        process.env.TOKEN_KEY,
+        {expiresIn: '2h'}
+    );
 
-    return await userModel.create(userDTO);
+    const userId = user.insertedId;
+    updatedUser = await userModel.update({token}, userId);
+    const returnUser = {
+        firstName: userDTO.firstName,
+        lastName: userDTO.lastName,
+        email: userDTO.email,
+        token: token
+    }
+    return returnUser;
 }
 
 userService.login = async function (email, password) {
@@ -18,12 +49,14 @@ userService.login = async function (email, password) {
         const userDTO = {
             firstName: user.firstName,
             lastName: user.lastName,
-            email: user.email
+            email: user.email,
+            token: user.token
         }
         return userDTO;
     }
     throw new Error('Unauthorized');
 };
+
 
 
 module.exports = userService;
