@@ -37,8 +37,7 @@ userModel.create = async function (userDTO) {
             firstName: userDTO.firstName,
             lastName: userDTO.lastName,
             email: userDTO.email.toLowerCase(),
-            password: userDTO.password,
-            token: ''
+            password: userDTO.password
         };
         if (await this.getOneByEmail(userDTO.email) !== null) throw new Error('EntityTaken');
         const createdUserResponse = await db_connect
@@ -51,7 +50,7 @@ userModel.create = async function (userDTO) {
     }
 }
 
-userModel.update = async function(userFields, userId) {
+userModel.updateById = async function(userFields, userId) {
     try {
         let db_connect = dbo.getDb('authApp');
         const updatedUser = await db_connect

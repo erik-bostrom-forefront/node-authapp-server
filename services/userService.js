@@ -31,8 +31,6 @@ userService.create = async function (userDTO) {
         {expiresIn: '2h'}
     );
 
-    const userId = user.insertedId;
-    updatedUser = await userModel.update({token}, userId);
     const returnUser = {
         firstName: userDTO.firstName,
         lastName: userDTO.lastName,
@@ -46,11 +44,16 @@ userService.login = async function (email, password) {
     user = await userModel.getOneByEmail(email);
     const login = await bcrypt.compare(password, user.password);
     if(login) {
+        const token = jwt.sign(
+            {user_id: user._id, email: user.email},
+            process.env.TOKEN_KEY,
+            {expiresIn: '2h'}
+        );
         const userDTO = {
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
-            token: user.token
+            token
         }
         return userDTO;
     }
