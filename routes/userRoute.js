@@ -1,5 +1,6 @@
 const express = require('express');
 const usersRoutes = express.Router();
+const auth = require('../middleware/auth');
 const userService = require('../services/userService');
 
 usersRoutes.route('/users').get( async function (req, res) {
@@ -40,9 +41,10 @@ usersRoutes.route('/users/create').post( async function (req, res) {
     
 });
 
-usersRoutes.route('/users/autenticate').post(function (req, res) {
-    // const userDTO = req.body;
-    // const user = await userService.authenticate(userDTO);
+usersRoutes.route('/users/autenticate').post(auth, function (req, res) {
+    return res.send({
+        status: 'ok'
+    });
 
     // return res.json( {user} );
 });

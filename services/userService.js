@@ -26,17 +26,20 @@ userService.create = async function (userDTO) {
     userDTO.password = hashedPassword;
     const user = await userModel.create(userDTO);
     const token = jwt.sign(
-        {user_id: user._id, email: user.email },
+        {
+            user_id: user._id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName
+        },
         process.env.TOKEN_KEY,
         {expiresIn: '2h'}
     );
 
     const returnUser = {
-        firstName: userDTO.firstName,
-        lastName: userDTO.lastName,
-        email: userDTO.email,
-        token: token
+        token
     }
+    
     return returnUser;
 }
 
@@ -45,21 +48,21 @@ userService.login = async function (email, password) {
     const login = await bcrypt.compare(password, user.password);
     if(login) {
         const token = jwt.sign(
-            {user_id: user._id, email: user.email},
+            {
+                user_id: user._id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName
+            },
             process.env.TOKEN_KEY,
             {expiresIn: '2h'}
         );
         const userDTO = {
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
             token
         }
         return userDTO;
     }
     throw new Error('Unauthorized');
 };
-
-
 
 module.exports = userService;
