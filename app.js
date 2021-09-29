@@ -1,17 +1,20 @@
-const express = require("express");
+import express, { json } from "express";
+import cors from "cors";
+import _ from './config/loadConfig.js'; // eslint-disable-line no-unused-vars
+import userRoute from './routes/userRoute.js';
+import { connectToServer } from "./db/conn.js";
+
 const app = express();
-const cors = require("cors");
-require("dotenv").config( {path: "./config/config.env"} );
 const port = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json());
-app.use(require("./routes/userRoute"));
-const dbo = require("./db/conn");
+app.use(json());
+app.use(userRoute);
+
  
 app.listen(port, () => {
-    dbo.connectToServer(function (err) {
+    connectToServer(function(err) {
         if (err) console.error(err);
-    });
+    });    
     console.log(`Server is running on port ${port}`);
 });

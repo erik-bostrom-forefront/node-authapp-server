@@ -1,6 +1,5 @@
-const userModel = require('../models/userModel');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+import userModel from '../models/userModel.js';
+import {createToken, hashPassword, comparePassword } from '../helpers/auth.js';
 const userService = {};
 
 userService.getAll = async function () {
@@ -22,19 +21,10 @@ userService.getOneByEmail = async function (email) {
 }
 
 userService.create = async function (userDTO) {
-    let hashedPassword = await bcrypt.hash(userDTO.password, 10);
+    let hashedPassword = await hashPassword(userDTO.password);
     userDTO.password = hashedPassword;
     const user = await userModel.create(userDTO);
-    const token = jwt.sign(
-        {
-            user_id: user._id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName
-        },
-        process.env.TOKEN_KEY,
-        {expiresIn: '2h'}
-    );
+    const token = createToken(user);
 
     const returnUser = {
         token
@@ -43,20 +33,18 @@ userService.create = async function (userDTO) {
     return returnUser;
 }
 
+userService.delete = async function (email) {
+    const user = await userModel.getOneByEmail(email);
+    const deleteUser = await userModel.deleteById(user._id);
+    return deleteUser;
+}
+
+
 userService.login = async function (email, password) {
-    user = await userModel.getOneByEmail(email);
-    const login = await bcrypt.compare(password, user.password);
+    const user = await userModel.getOneByEmail(email);
+    const login = await comparePassword(password, user.password);
     if(login) {
-        const token = jwt.sign(
-            {
-                user_id: user._id,
-                email: user.email,
-                firstName: user.firstName,
-                lastName: user.lastName
-            },
-            process.env.TOKEN_KEY,
-            {expiresIn: '2h'}
-        );
+        const token = createToken(user);
         const userDTO = {
             token
         }
@@ -65,4 +53,4 @@ userService.login = async function (email, password) {
     throw new Error('Unauthorized');
 };
 
-module.exports = userService;
+export default userService;

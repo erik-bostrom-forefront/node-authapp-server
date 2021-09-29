@@ -1,11 +1,10 @@
-const dbo = require('../db/conn');
+import {getDb} from '../db/conn.js';
 
 const userModel = {};
 
 userModel.getAll = async function () {
     try {
-        let db_connect = dbo.getDb('authApp');
-        const users = await db_connect
+        const users = await getDb()
             .collection('users')
             .find({})
             .toArray();
@@ -19,8 +18,7 @@ userModel.getAll = async function () {
 
 userModel.getOneByEmail = async function (email) {
     try {
-        let db_connect = dbo.getDb('authApp');
-        const user = await db_connect
+        const user = await getDb()
             .collection('users')
             .findOne({ email: email });
         return user;
@@ -32,7 +30,6 @@ userModel.getOneByEmail = async function (email) {
 
 userModel.create = async function (userDTO) {
     try {
-        let db_connect = dbo.getDb('authApp');
         let user = {
             firstName: userDTO.firstName,
             lastName: userDTO.lastName,
@@ -40,7 +37,7 @@ userModel.create = async function (userDTO) {
             password: userDTO.password
         };
         if (await this.getOneByEmail(userDTO.email) !== null) throw new Error('EntityTaken');
-        const createdUserResponse = await db_connect
+        const createdUserResponse = await getDb()
             .collection('users')
             .insertOne(user);
         return createdUserResponse;
@@ -52,8 +49,7 @@ userModel.create = async function (userDTO) {
 
 userModel.updateById = async function(userFields, userId) {
     try {
-        let db_connect = dbo.getDb('authApp');
-        const updatedUser = await db_connect
+        const updatedUser = await getDb()
             .collection('users')
             .updateOne(
                 {_id: userId}, //filter
@@ -66,4 +62,16 @@ userModel.updateById = async function(userFields, userId) {
     }
 }
 
-module.exports = userModel;
+userModel.deleteById = async function(userId) {
+    try {
+        const deleteUser = await getDb()
+            .collection('users')
+            .deleteOne({_id: userId});
+        return deleteUser;
+    }catch (err) {
+        console.error(err);
+        throw new Error(err);
+    }
+}
+
+export default userModel;

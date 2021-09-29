@@ -1,20 +1,16 @@
-const jwt = require("jsonwebtoken");
-const config = process.env;
+import { verifyToken } from '../helpers/auth.js';
 
-const verifyToken = (req, res, next) => {
+const auth = (req, res, next) => {
     const token = req.body.token || req.query.token || req.headers["x-access-token"];
     if (!token) {
         return res.status(403).send("A token is required for authentication");
     }
-
     try {
-        const decode = jwt.verify(token, config.TOKEN_KEY);
-        req.user = decode;
-    } catch(err) {
+        req.user = verifyToken(token);
+    }catch(err) {
         return res.status(401).send("Invalid Token");
     }
-    return next();
-
+    return next()
 }
 
-module.exports = verifyToken;
+export default auth;

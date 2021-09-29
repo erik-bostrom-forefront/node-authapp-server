@@ -1,23 +1,26 @@
-const { MongoClient } = require('mongodb');
-const Db = process.env.DATABASE_URL;
-const client = new MongoClient(Db, {
+// const { MongoClient } = require('mongodb');
+import {MongoClient} from 'mongodb';
+const uri = process.env.DATABASE_URI;
+
+const client = new MongoClient(uri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 });
 var _db;
 
-module.exports = {
-    connectToServer: function(callback) {
-        client.connect(function (err, db) {
-            if (db)
-            {
-                _db = db.db('authAppDb');
-                console.log('Successfully connected to MongoDB.');
-            }
-            return callback(err);
-        });
-    },
-    getDb: function() {
+const connectToServer = function (callback) {
+    client.connect(function (err, db) {
+        if (db) {
+            _db = db.db('authAppDb');
+        }
+        return callback(err);
+    });
+};
+
+const getDb = function () {
+    if (_db) {
         return _db;
     }
 }
+
+export {connectToServer, getDb}
